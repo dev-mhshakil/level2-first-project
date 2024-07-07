@@ -1,0 +1,25 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import express, { Application, NextFunction, Request, Response } from 'express';
+const app: Application = express();
+
+// parsers
+app.use(express.json());
+
+const globalErrorhandler = (
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const statusCode = 500;
+  const message = err.message || 'Something went wrong';
+
+  return res.status(statusCode).json({
+    success: false,
+    message,
+    error: err,
+  });
+};
+
+export default globalErrorhandler;

@@ -8,84 +8,91 @@ import {
   TUserName,
 } from './student.interface';
 import validator from 'validator';
-import bcrypt from 'bcrypt';
-import config from '../../config';
 
-const userNameSchema = new Schema<TUserName>({
-  firstName: {
-    type: String,
-    required: [true, 'First Name is required'],
-    trim: true,
-    maxLength: [20, 'First Name can not exceed 20 characters'],
-    validate: {
-      validator: function (value: string) {
-        const firstNameStr = value.charAt(0).toUpperCase() + value.slice(1);
+const userNameSchema = new Schema<TUserName>(
+  {
+    firstName: {
+      type: String,
+      required: [true, 'First Name is required'],
+      trim: true,
+      maxLength: [20, 'First Name can not exceed 20 characters'],
+      validate: {
+        validator: function (value: string) {
+          const firstNameStr = value.charAt(0).toUpperCase() + value.slice(1);
 
-        return firstNameStr === value;
+          return firstNameStr === value;
+        },
+        message: 'First Name should start with a capital letter',
       },
-      message: 'First Name should start with a capital letter',
+    },
+    middleName: {
+      type: String,
+      trim: true,
+      maxLength: [20, 'Middle Name can not exceed 20 characters'],
+    },
+    lastName: {
+      type: String,
+      required: [true, 'Last Name is required'],
+      trim: true,
+      maxLength: [20, 'Last Name can not exceed 20 characters'],
+      validate: {
+        validator: (value: string) => validator.isAlpha(value),
+        message: '{VALUE} should only contain alphanumeric characters',
+      },
     },
   },
-  middleName: {
-    type: String,
-    trim: true,
-    maxLength: [20, 'Middle Name can not exceed 20 characters'],
-  },
-  lastName: {
-    type: String,
-    required: [true, 'Last Name is required'],
-    trim: true,
-    maxLength: [20, 'Last Name can not exceed 20 characters'],
-    validate: {
-      validator: (value: string) => validator.isAlpha(value),
-      message: '{VALUE} should only contain alphanumeric characters',
+  { _id: false },
+);
+
+const guardiansSchema = new Schema<TGuardians>(
+  {
+    fatherName: {
+      type: String,
+      required: [true, "Father's Name is required"],
+    },
+    fatherOccupation: {
+      type: String,
+    },
+    fatherContactNo: {
+      type: String,
+      required: [true, "Father's Contact Number is required"],
+    },
+    motherName: {
+      type: String,
+      required: [true, "Mother's Name is required"],
+    },
+    motherOccupation: {
+      type: String,
+    },
+    motherContactNo: {
+      type: String,
+      required: [true, "Mother's Contact Number is required"],
     },
   },
-});
+  { _id: false },
+);
 
-const guardiansSchema = new Schema<TGuardians>({
-  fatherName: {
-    type: String,
-    required: [true, "Father's Name is required"],
+const localGuardianSchema = new Schema<TLocalGuardian>(
+  {
+    name: {
+      type: String,
+      required: [true, "Local Guardian's Name is required"],
+    },
+    contactNo: {
+      type: String,
+      required: [true, "Local Guardian's Contact Number is required"],
+    },
+    occupation: {
+      type: String,
+      required: [true, "Local Guardian's Occupation is required"],
+    },
+    address: {
+      type: String,
+      required: [true, "Local Guardian's Address is required"],
+    },
   },
-  fatherOccupation: {
-    type: String,
-  },
-  fatherContactNo: {
-    type: String,
-    required: [true, "Father's Contact Number is required"],
-  },
-  motherName: {
-    type: String,
-    required: [true, "Mother's Name is required"],
-  },
-  motherOccupation: {
-    type: String,
-  },
-  motherContactNo: {
-    type: String,
-    required: [true, "Mother's Contact Number is required"],
-  },
-});
-
-const localGuardianSchema = new Schema<TLocalGuardian>({
-  name: {
-    type: String,
-    required: [true, "Local Guardian's Name is required"],
-  },
-  contactNo: {
-    type: String,
-    required: [true, "Local Guardian's Contact Number is required"],
-  },
-  occupation: {
-    type: String,
-    required: [true, "Local Guardian's Occupation is required"],
-  },
-  address: {
-    type: String,
-    required: [true, "Local Guardian's Address is required"],
-  },
-});
+  { _id: false },
+);
 
 const studentSchema = new Schema<TStudent, StudentModel, StudentMethod>(
   {
@@ -94,12 +101,13 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethod>(
       required: [true, 'Student ID is required and must be unique'],
       unique: true,
     },
-    password: {
-      type: String,
-      required: [true, 'Student Password is required and must be unique'],
-      minLength: [8, 'Password must be at least 8 characters long'],
-      maxLength: [16, 'Password cannot exceed 16 characters'],
+    user: {
+      type: Schema.Types.ObjectId,
+      required: [true, 'Student ID is required and must be unique'],
+      unique: true,
+      ref: 'User',
     },
+
     name: {
       type: userNameSchema,
       required: [true, 'Name is required'],
@@ -157,20 +165,13 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethod>(
     profileImage: {
       type: String,
     },
-    isActive: {
-      type: String,
-      enum: {
-        values: ['active', 'blocked'],
-        message: 'Status must be either active or blocked',
-      },
-      default: 'active',
-    },
     isDeleted: {
       type: Boolean,
       default: false,
     },
   },
   {
+    timestamps: true,
     toJSON: {
       virtuals: true,
     },
@@ -182,25 +183,6 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethod>(
 studentSchema.virtual('fullName').get(function () {
   const middleName = this.name.middleName ? ` ${this.name.middleName}` : '';
   return `${this.name.firstName}${middleName} ${this.name.lastName}`;
-});
-
-// pre save middleware/ hook
-studentSchema.pre('save', async function (next) {
-  // eslint-disable-next-line @typescript-eslint/no-this-alias
-  const user = this;
-
-  // hash the password before saving it to the database
-  user.password = await bcrypt.hash(
-    user.password,
-    Number(config.bcrypt_salt_rounds),
-  );
-  next();
-});
-
-// post save middleware/ hook
-studentSchema.post('save', function (doc, next) {
-  (doc as TStudent).password = '';
-  next();
 });
 
 // query middleware/ hook
