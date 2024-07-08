@@ -33,6 +33,30 @@ const createStudent = async (
   }
 };
 
+const createFaculty = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { password, faculty: facultyData } = req.body;
+
+    const result = await UserServices.createFacultyIntoDB(
+      password,
+      facultyData,
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Faculty created successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const UserController = {
   createStudent,
+  createFaculty,
 };
