@@ -1,62 +1,44 @@
-import { NextFunction, Request, Response } from 'express';
-// import studentValidationSchema from '../student/student.zod.validation';
-import { UserServices } from './user.service';
-import sendResponse from '../../utils/sendResponse';
 import httpStatus from 'http-status';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { UserServices } from './user.service';
 
-const createStudent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const { password, student: studentData } = req.body;
+const createStudent = catchAsync(async (req, res) => {
+  const { password, student: studentData } = req.body;
 
-    // data validation using joi
-    // const { error } = studentValidationSchema.validate(req.body);
+  const result = await UserServices.createStudentIntoDB(password, studentData);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Student created successfully',
+    data: result,
+  });
+});
 
-    // data validation using zod
-    // const zodParsedData = studentValidationSchema.parse(studentData);
+const createFaculty = catchAsync(async (req, res) => {
+  const { password, faculty: facultyData } = req.body;
 
-    const result = await UserServices.createStudentIntoDB(
-      password,
-      studentData,
-    );
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: 'Student created successfully',
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  const result = await UserServices.createFacultyIntoDB(password, facultyData);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Faculty created successfully',
+    data: result,
+  });
+});
 
-const createFaculty = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const { password, faculty: facultyData } = req.body;
-
-    const result = await UserServices.createFacultyIntoDB(
-      password,
-      facultyData,
-    );
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: 'Faculty created successfully',
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+const getAllUsers = catchAsync(async (req, res) => {
+  const result = await UserServices.getAllUsersFromDB();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Users fetched successfully',
+    data: result,
+  });
+});
 
 export const UserController = {
   createStudent,
   createFaculty,
+  getAllUsers,
 };
