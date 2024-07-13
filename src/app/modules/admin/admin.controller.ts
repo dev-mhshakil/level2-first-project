@@ -1,43 +1,59 @@
+import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
-import { AdminService } from './admin.service';
+import { AdminServices } from './admin.service';
 
-const getAllAdmin = catchAsync(async (req, res) => {
-  const result = await AdminService.getAllAdminsFromDB(req.query);
+const getSingleAdmin = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await AdminServices.getSingleAdminFromDB(id);
 
   sendResponse(res, {
-    statusCode: 200,
+    statusCode: httpStatus.OK,
     success: true,
+    message: 'Admin is retrieved successfully',
     data: result,
-    message: 'Admin list fetched successfully',
   });
 });
 
-const getAdminById = catchAsync(async (req, res) => {
-  const { adminId } = req.query;
-  const result = await AdminService.getAdminByIdFromDB(adminId as string);
+const getAllAdmins = catchAsync(async (req, res) => {
+  const result = await AdminServices.getAllAdminsFromDB(req.query);
 
   sendResponse(res, {
-    statusCode: 200,
+    statusCode: httpStatus.OK,
     success: true,
+    message: 'Admins are retrieved successfully',
     data: result,
-    message: 'Admin fetched successfully',
   });
 });
 
 const updateAdmin = catchAsync(async (req, res) => {
-  const { adminId } = req.params;
-  const updatedAdmin = await AdminService.updateAdminInDB(adminId, req.body);
+  const { id } = req.params;
+  const { admin } = req.body;
+  const result = await AdminServices.updateAdminIntoDB(id, admin);
+
   sendResponse(res, {
-    statusCode: 200,
+    statusCode: httpStatus.OK,
     success: true,
-    data: updatedAdmin,
-    message: 'Admin updated successfully',
+    message: 'Admin is updated successfully',
+    data: result,
   });
 });
 
-export const AdminController = {
-  getAllAdmin,
-  getAdminById,
+const deleteAdmin = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await AdminServices.deleteAdminFromDB(id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Admin is deleted successfully',
+    data: result,
+  });
+});
+
+export const AdminControllers = {
+  getAllAdmins,
+  getSingleAdmin,
+  deleteAdmin,
   updateAdmin,
 };

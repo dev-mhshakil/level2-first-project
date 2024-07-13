@@ -1,31 +1,39 @@
 import { Model, Types } from 'mongoose';
 
-export type TAdminName = {
+export type TGender = 'male' | 'female' | 'other';
+export type TBloodGroup =
+  | 'A+'
+  | 'A-'
+  | 'B+'
+  | 'B-'
+  | 'AB+'
+  | 'AB-'
+  | 'O+'
+  | 'O-';
+
+export type TUserName = {
   firstName: string;
-  middleName?: string | '';
+  middleName: string;
   lastName: string;
 };
 
 export type TAdmin = {
   id: string;
   user: Types.ObjectId;
-  name: object;
   designation: string;
-  gender: string;
-  dateOfBirth: string;
-  bloodGroup: string;
+  name: TUserName;
+  gender: TGender;
+  dateOfBirth?: Date;
   email: string;
   contactNo: string;
   emergencyContactNo: string;
+  bloodGroup?: TBloodGroup;
   presentAddress: string;
   permanentAddress: string;
-  profileImage: string;
-  managementDepartment: Types.ObjectId;
+  profileImg?: string;
   isDeleted: boolean;
 };
 
-export type AdminMethod = {
+export type AdminModel = {
   isUserExists(id: string): Promise<TAdmin | null>;
-};
-
-export type AdminModel = Model<TAdmin, Record<string, never>, AdminMethod>;
+} & Model<TAdmin>;
