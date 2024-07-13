@@ -1,84 +1,86 @@
-import { model, Schema } from 'mongoose';
-import validator from 'validator';
-import { FacultyMethod, FacultyModel, TFaculty } from './faculty.interface';
+import { Schema, model } from 'mongoose';
+import { BloodGroup, Gender } from './faculty.constant';
+import { FacultyModel, TFaculty, TUserName } from './faculty.interface';
 
-const facultySchema = new Schema<TFaculty, FacultyModel, FacultyMethod>(
+const userNameSchema = new Schema<TUserName>({
+  firstName: {
+    type: String,
+    required: [true, 'First Name is required'],
+    trim: true,
+    maxLength: [20, 'Name can not be more than 20 characters'],
+  },
+  middleName: {
+    type: String,
+    trim: true,
+  },
+  lastName: {
+    type: String,
+    trim: true,
+    required: [true, 'Last Name is required'],
+    maxLength: [20, 'Name can not be more than 20 characters'],
+  },
+});
+
+const facultySchema = new Schema<TFaculty, FacultyModel>(
   {
     id: {
       type: String,
-      required: [true, 'Faculty ID is required and must be unique'],
+      required: [true, 'ID is required'],
       unique: true,
     },
     user: {
       type: Schema.Types.ObjectId,
-      required: true,
+      required: [true, 'User id is required'],
+      unique: true,
       ref: 'User',
-    },
-    name: {
-      type: Object,
-      required: true,
     },
     designation: {
       type: String,
-      required: true,
+      required: [true, 'Designation is required'],
+    },
+    name: {
+      type: userNameSchema,
+      required: [true, 'Name is required'],
     },
     gender: {
       type: String,
       enum: {
-        values: ['male', 'female', 'other'],
-        message: 'Gender must be either male, female or other.',
+        values: Gender,
+        message: '{VALUE} is not a valid gender',
       },
       required: [true, 'Gender is required'],
     },
-    dateOfBirth: {
+    dateOfBirth: { type: Date },
+    email: {
       type: String,
-      required: true,
+      required: [true, 'Email is required'],
+      unique: true,
+    },
+    contactNo: { type: String, required: [true, 'Contact number is required'] },
+    emergencyContactNo: {
+      type: String,
+      required: [true, 'Emergency contact number is required'],
     },
     bloodGroup: {
       type: String,
       enum: {
-        values: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
-        message:
-          'Blood Group must be one of the following: A+, A-, B+, B-, AB+, AB-, O+, O-',
+        values: BloodGroup,
+        message: '{VALUE} is not a valid blood group',
       },
-    },
-    email: {
-      type: String,
-      unique: true,
-      required: [true, 'Email is required and must be unique'],
-      validate: {
-        validator: (value: string) => validator.isEmail(value),
-        message: '{VALUE} is not a valid email',
-      },
-    },
-    contactNo: {
-      type: String,
-      required: true,
-    },
-    emergencyContactNo: {
-      type: String,
-      required: true,
     },
     presentAddress: {
       type: String,
-      required: [true, 'Present Address is required'],
+      required: [true, 'Present address is required'],
     },
     permanentAddress: {
       type: String,
-      required: [true, 'Permanent Address is required'],
+      required: [true, 'Permanent address is required'],
     },
-    profileImage: {
-      type: String,
-    },
-    academicFaculty: {
-      type: Schema.Types.ObjectId,
-      ref: 'AcademicFaculty',
-      required: true,
-    },
+    profileImg: { type: String },
     academicDepartment: {
       type: Schema.Types.ObjectId,
-      ref: 'AcademicDepartment',
-      required: true,
+      required: [true, 'User id is required'],
+      ref: 'User',
     },
     isDeleted: {
       type: Boolean,
@@ -86,11 +88,41 @@ const facultySchema = new Schema<TFaculty, FacultyModel, FacultyMethod>(
     },
   },
   {
-    timestamps: true,
+    toJSON: {
+      virtuals: true,
+    },
   },
 );
 
-facultySchema.methods.isUserExists = async function (id: string) {
+// generating full name
+facultySchema.virtual('fullName').get(function () {
+  return (
+    this?.name?.firstName +
+    '' +
+    this?.name?.middleName +
+    '' +
+    this?.name?.lastName
+  );
+});
+
+// filter out deleted documents
+facultySchema.pre('find', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
+
+facultySchema.pre('findOne', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
+
+facultySchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
+  next();
+});
+
+//checking if user is already exist!
+facultySchema.statics.isUserExists = async function (id: string) {
   const existingUser = await Faculty.findOne({ id });
   return existingUser;
 };
