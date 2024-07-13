@@ -1,13 +1,13 @@
 import { Schema, model } from 'mongoose';
+import validator from 'validator';
 import {
+  StudentMethod,
+  StudentModel,
   TGuardians,
   TLocalGuardian,
   TStudent,
-  StudentMethod,
-  StudentModel,
   TUserName,
 } from './student.interface';
-import validator from 'validator';
 
 const userNameSchema = new Schema<TUserName>(
   {
@@ -191,8 +191,8 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethod>(
 // virtual
 
 studentSchema.virtual('fullName').get(function () {
-  const middleName = this.name.middleName ? ` ${this.name.middleName}` : '';
-  return `${this.name.firstName}${middleName} ${this.name.lastName}`;
+  const middleName = this?.name?.middleName ? ` ${this?.name?.middleName}` : '';
+  return `${this?.name?.firstName}${middleName} ${this?.name?.lastName}`;
 });
 
 // query middleware/ hook
