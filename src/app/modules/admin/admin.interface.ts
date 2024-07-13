@@ -1,6 +1,12 @@
 import { Types } from 'mongoose';
 
-export type TFaculty = {
+export type TAdminName = {
+  firstName: string;
+  middleName?: string | '';
+  lastName: string;
+};
+
+export type TAdmin = {
   id: string;
   user: Types.ObjectId;
   name: object;
@@ -14,7 +20,6 @@ export type TFaculty = {
   presentAddress: string;
   permanentAddress: string;
   profileImage: string;
-  academicFaculty: Types.ObjectId;
-  academicDepartment: Types.ObjectId;
+  managementDepartment: Types.ObjectId;
   isDeleted: boolean;
 };

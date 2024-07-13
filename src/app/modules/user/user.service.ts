@@ -2,13 +2,19 @@ import httpStatus from 'http-status';
 import config from '../../config';
 import { AppError } from '../../errors/AppError';
 import { AcademicSemester } from '../academicSemester/academicSemester.model';
+import { TAdmin } from '../admin/admin.interface';
+import { Admin } from '../admin/admin.model';
 import { TFaculty } from '../faculty/faculty.interface';
 import { Faculty } from '../faculty/faculty.model';
 import { TStudent } from '../student/student.interface';
 import { Student } from '../student/student.model';
 import { TUser } from './user.interface';
 import { User } from './user.model';
-import { generatedStudentId } from './user.utils';
+import {
+  generateAdminId,
+  generatedStudentId,
+  generateFacultyId,
+} from './user.utils';
 
 const createStudentIntoDB = async (password: string, payload: TStudent) => {
   // create a user
@@ -76,20 +82,82 @@ const createFacultyIntoDB = async (password: string, facultyData: TFaculty) => {
   userData.role = 'faculty';
 
   // manually generated id
-  userData.id = Math.random().toString(36).substr(2, 9) as string;
+  userData.id = await generateFacultyId();
+
+  const session = await User.startSession();
+  session.startTransaction();
+
+  try {
+    const newUser = await User.create([userData], { session });
+
+    // create a faculty
+    if (Object.keys(newUser).length) {
+      // set id, _id as user data
+      facultyData.id = newUser[0].id;
+      facultyData.user = newUser[0]._id;
+
+      const newFaculty = await Faculty.create([facultyData], { session });
+
+      if (!newFaculty) {
+        throw new AppError(
+          httpStatus.BAD_REQUEST,
+          'Failed to create a faculty',
+        );
+      }
+      await session.commitTransaction();
+      session.endSession();
+      return newFaculty;
+    }
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create a faculty');
+  }
 
   // create a user
-  const newUser = await User.create(userData);
+};
 
-  // create a faculty
-  if (Object.keys(newUser).length) {
-    // set id, _id as user data
-    facultyData.id = newUser.id;
-    facultyData.user = newUser._id;
+const createAdminIntoDB = async (password: string, adminData: TAdmin) => {
+  // create a user
+  const userData: Partial<TUser> = {};
 
-    const newFaculty = await Faculty.create(facultyData);
-    return newFaculty;
+  // if password is not provided, use default password
+  userData.password = password || (config.default_password as string);
+
+  // set faculty role
+  userData.role = 'admin';
+
+  // manually generated id
+  userData.id = await generateAdminId();
+
+  const session = await User.startSession();
+  session.startTransaction();
+
+  try {
+    const newUser = await User.create([userData], { session });
+
+    // create a faculty
+    if (Object.keys(newUser).length) {
+      // set id, _id as user data
+      adminData.id = newUser[0].id;
+      adminData.user = newUser[0]._id;
+
+      const newAdmin = await Admin.create([adminData], { session });
+
+      if (!newAdmin) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create a Admin');
+      }
+      await session.commitTransaction();
+      session.endSession();
+      return newAdmin;
+    }
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create a Admin');
   }
+
+  // create a user
 };
 
 const getAllUsersFromDB = async () => {
@@ -100,5 +168,6 @@ const getAllUsersFromDB = async () => {
 export const UserServices = {
   createStudentIntoDB,
   createFacultyIntoDB,
+  createAdminIntoDB,
   getAllUsersFromDB,
 };

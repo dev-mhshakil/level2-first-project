@@ -6,9 +6,9 @@ const updateUserNameValidationSchema = z.object({
   lastName: z.string().optional(),
 });
 
-const facultyValidationSchema = z.object({
+const adminValidationSchema = z.object({
   body: z.object({
-    faculty: z.object({
+    admin: z.object({
       id: z.string(),
       name: updateUserNameValidationSchema,
       designation: z.string(),
@@ -21,13 +21,12 @@ const facultyValidationSchema = z.object({
       presentAddress: z.string(),
       permanentAddress: z.string(),
       profileImage: z.string(),
-      academicFaculty: z.string(),
-      academicDepartment: z.string(),
+      managementDepartment: z.string(),
       isDeleted: z.boolean(),
     }),
   }),
 });
 
-export const FacultyValidation = {
-  facultyValidationSchema,
+export const AdminValidation = {
+  adminValidationSchema,
 };

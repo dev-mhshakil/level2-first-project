@@ -1,5 +1,6 @@
 import express from 'express';
 import validateRequest from '../../middlewares/validateRequest';
+import { AdminValidation } from '../admin/admin.validation';
 import { FacultyValidation } from '../faculty/faculty.validation';
 import { StudentValidations } from '../student/student.zod.validation';
 import { UserController } from './user.controller';
@@ -16,6 +17,12 @@ router.post(
   '/create-faculty',
   validateRequest(FacultyValidation.facultyValidationSchema),
   UserController.createFaculty,
+);
+
+router.post(
+  '/create-admin',
+  validateRequest(AdminValidation.adminValidationSchema),
+  UserController.createAdmin,
 );
 
 router.get('/', UserController.getAllUsers);

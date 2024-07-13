@@ -1,7 +1,27 @@
 import { model, Schema } from 'mongoose';
-import { TFaculty } from './faculty.interface';
+import { TAdmin } from './admin.interface';
 
-const facultySchema = new Schema<TFaculty>(
+const nameSchema = new Schema(
+  {
+    firstName: {
+      type: String,
+      required: true,
+    },
+    middleName: {
+      type: String,
+    },
+
+    lastName: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    _id: false,
+  },
+);
+
+const adminSchema = new Schema<TAdmin>(
   {
     id: {
       type: String,
@@ -13,10 +33,8 @@ const facultySchema = new Schema<TFaculty>(
       required: true,
       ref: 'User',
     },
-    name: {
-      type: Object,
-      required: true,
-    },
+    name: nameSchema,
+
     designation: {
       type: String,
       required: true,
@@ -58,14 +76,9 @@ const facultySchema = new Schema<TFaculty>(
     profileImage: {
       type: String,
     },
-    academicFaculty: {
+    managementDepartment: {
       type: Schema.Types.ObjectId,
-      ref: 'AcademicFaculty',
-      required: true,
-    },
-    academicDepartment: {
-      type: Schema.Types.ObjectId,
-      ref: 'AcademicDepartment',
+      ref: 'ManagementDepartment',
       required: true,
     },
     isDeleted: {
@@ -78,4 +91,4 @@ const facultySchema = new Schema<TFaculty>(
   },
 );
 
-export const Faculty = model<TFaculty>('Faculty', facultySchema);
+export const Admin = model<TAdmin>('Admin', adminSchema);
