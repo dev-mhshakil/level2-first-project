@@ -2,6 +2,10 @@ export const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
 
 export const studentSearchableFields = [
   'email',
-  'presentAddress',
+  'id',
+  'contactNo',
+  'emergencyContactNo',
   'name.firstName',
+  'name.lastName',
+  'name.middleName',
 ];
