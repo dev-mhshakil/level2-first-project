@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 export type TAdminName = {
   firstName: string;
@@ -23,3 +23,9 @@ export type TAdmin = {
   managementDepartment: Types.ObjectId;
   isDeleted: boolean;
 };
+
+export type AdminMethod = {
+  isUserExists(id: string): Promise<TAdmin | null>;
+};
+
+export type AdminModel = Model<TAdmin, Record<string, never>, AdminMethod>;

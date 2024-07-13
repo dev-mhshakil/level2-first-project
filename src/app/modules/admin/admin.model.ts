@@ -1,5 +1,6 @@
 import { model, Schema } from 'mongoose';
-import { TAdmin } from './admin.interface';
+import validator from 'validator';
+import { AdminMethod, AdminModel, TAdmin } from './admin.interface';
 
 const nameSchema = new Schema(
   {
@@ -21,7 +22,7 @@ const nameSchema = new Schema(
   },
 );
 
-const adminSchema = new Schema<TAdmin>(
+const adminSchema = new Schema<TAdmin, AdminMethod, AdminModel>(
   {
     id: {
       type: String,
@@ -41,7 +42,11 @@ const adminSchema = new Schema<TAdmin>(
     },
     gender: {
       type: String,
-      required: true,
+      enum: {
+        values: ['male', 'female', 'other'],
+        message: 'Gender must be either male, female or other.',
+      },
+      required: [true, 'Gender is required'],
     },
     dateOfBirth: {
       type: String,
@@ -54,8 +59,12 @@ const adminSchema = new Schema<TAdmin>(
     },
     email: {
       type: String,
-      required: true,
       unique: true,
+      required: [true, 'Email is required and must be unique'],
+      validate: {
+        validator: (value: string) => validator.isEmail(value),
+        message: '{VALUE} is not a valid email',
+      },
     },
     contactNo: {
       type: String,
@@ -91,4 +100,9 @@ const adminSchema = new Schema<TAdmin>(
   },
 );
 
-export const Admin = model<TAdmin>('Admin', adminSchema);
+adminSchema.methods.isUserExists = async function (id: string) {
+  const existingUser = await Admin.findOne({ _id: id });
+  return existingUser;
+};
+
+export const Admin = model<TAdmin, AdminModel>('Admin', adminSchema);

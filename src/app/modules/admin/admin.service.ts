@@ -18,12 +18,12 @@ const getAllAdminsFromDB = async (query: Record<string, unknown>) => {
 };
 
 const getAdminByIdFromDB = async (adminId: string) => {
-  const result = await Admin.findOne({ id: adminId });
+  const result = await Admin.findById(adminId);
   return result;
 };
 
 const updateAdminInDB = async (adminId: string, adminData: object) => {
-  const result = await Admin.findByIdAndUpdate({ id: adminId }, adminData, {
+  const result = await Admin.findByIdAndUpdate(adminId, adminData, {
     new: true,
   });
   return result;

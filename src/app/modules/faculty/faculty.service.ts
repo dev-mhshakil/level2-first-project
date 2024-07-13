@@ -18,14 +18,13 @@ const getAllFacultiesFromDB = async (query: Record<string, unknown>) => {
 };
 
 const getFacultyById = async (facultyId: string) => {
-  const result = await Faculty.findOne({ id: facultyId }).populate(
-    'academicDepartment',
-  );
+  const result =
+    await Faculty.findById(facultyId).populate('academicDepartment');
   return result;
 };
 
 const updateFacultyInDB = async (id: string, facultyData: object) => {
-  const result = await Faculty.findByIdAndUpdate({ id: id }, facultyData, {
+  const result = await Faculty.findByIdAndUpdate(id, facultyData, {
     new: true,
   });
   return result;
