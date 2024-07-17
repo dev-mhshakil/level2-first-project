@@ -1,7 +1,7 @@
-import { model, Schema } from 'mongoose';
-import { TUser } from './user.interface';
 import bcrypt from 'bcrypt';
+import { model, Schema } from 'mongoose';
 import config from '../../config';
+import { TUser, UserModel } from './user.interface';
 
 const userSchema = new Schema<TUser>(
   {
@@ -15,10 +15,14 @@ const userSchema = new Schema<TUser>(
       required: [true, 'Student Password is required and must be unique'],
       minLength: [8, 'Password must be at least 8 characters long'],
       maxLength: [16, 'Password cannot exceed 16 characters'],
+      select: 0,
     },
     needsPasswordChange: {
       type: Boolean,
       default: true,
+    },
+    passwordChangeAt: {
+      type: Date,
     },
     role: {
       type: String,
@@ -56,4 +60,24 @@ userSchema.post('save', function (doc, next) {
   next();
 });
 
-export const User = model<TUser>('User', userSchema);
+userSchema.statics.isUserExistsByCustomId = async function (id: string) {
+  return await User.findOne({ id }).select('+password');
+};
+
+userSchema.statics.isPasswordMatched = async function (
+  plainTextPassword,
+  hashPassword,
+) {
+  return await bcrypt.compare(plainTextPassword, hashPassword);
+};
+
+userSchema.statics.isJWTIssuedBeforePasswordChanged = function (
+  passwordChangedTimestamp: Date,
+  jwtIssuedTimestamp: number,
+) {
+  const passwordChangedTime =
+    new Date(passwordChangedTimestamp).getTime() / 1000;
+  return passwordChangedTime > jwtIssuedTimestamp;
+};
+
+export const User = model<TUser, UserModel>('User', userSchema);
